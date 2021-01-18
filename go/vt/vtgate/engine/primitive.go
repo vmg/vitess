@@ -235,10 +235,9 @@ func Exists(m Match, p Primitive) bool {
 	return Find(m, p) != nil
 }
 
-// Size is defined so that Plan can be given to a cache.LRUCache.
-// VTGate needs to maintain a cache of plans. It uses LRUCache, which
-// in turn requires its objects to define a Size function.
-func (p *Plan) Size() int {
+// CachedSize is defined so that Plan can be given to a cache.Cache.
+// VTGate needs to maintain a cache of plans.
+func (p *Plan) CachedSize() int64 {
 	return 1
 }
 
