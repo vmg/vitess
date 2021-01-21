@@ -17,18 +17,21 @@ limitations under the License.
 package visitorgen
 
 import (
+	"fmt"
 	"go/ast"
+	"go/token"
 	"reflect"
 )
 
 var _ ast.Visitor = (*walker)(nil)
 
 type walker struct {
+	fs     *token.FileSet
 	result SourceFile
 }
 
 // Walk walks the given AST and translates it to the simplified AST used by the next steps
-func Walk(node ast.Node) *SourceFile {
+func Walk(fileset *token.FileSet, node ast.Node) *SourceFile {
 	var w walker
 	ast.Walk(&w, node)
 	return &w.result
@@ -50,7 +53,7 @@ func (w *walker) Visit(node ast.Node) ast.Visitor {
 				for _, name := range f.Names {
 					fields = append(fields, &Field{
 						name: name.Name,
-						typ:  sastType(f.Type),
+						typ:  w.sastType(f.Type),
 					})
 				}
 
@@ -62,7 +65,7 @@ func (w *walker) Visit(node ast.Node) ast.Visitor {
 		case *ast.ArrayType:
 			w.append(&TypeAlias{
 				name: n.Name.Name,
-				typ:  &Array{inner: sastType(t2.Elt)},
+				typ:  &Array{inner: w.sastType(t2.Elt)},
 			})
 		case *ast.Ident:
 			w.append(&TypeAlias{
@@ -80,7 +83,7 @@ func (w *walker) Visit(node ast.Node) ast.Visitor {
 		var f *Field
 		if len(n.Recv.List) == 1 {
 			r := n.Recv.List[0]
-			t := sastType(r.Type)
+			t := w.sastType(r.Type)
 			if len(r.Names) > 1 {
 				panic("don't know what to do!")
 			}
@@ -112,19 +115,24 @@ func (w *walker) append(line Sast) {
 	w.result.lines = append(w.result.lines, line)
 }
 
-func sastType(e ast.Expr) Type {
+func (w *walker) sastType(e ast.Expr) Type {
 	switch n := e.(type) {
 	case *ast.StarExpr:
-		return &Ref{sastType(n.X)}
+		return &Ref{w.sastType(n.X)}
 	case *ast.Ident:
 		return &TypeString{n.Name}
 	case *ast.ArrayType:
-		return &Array{inner: sastType(n.Elt)}
+		return &Array{inner: w.sastType(n.Elt)}
 	case *ast.InterfaceType:
 		return &TypeString{"interface{}"}
 	case *ast.StructType:
 		return &TypeString{"struct{}"}
+	case *ast.SelectorExpr:
+		return &QualifiedType{
+			qual: w.sastType(n.X),
+			typ:  TypeString{n.Sel.Name},
+		}
 	}
 
-	panic(reflect.TypeOf(e))
+	panic(fmt.Errorf("unsupported AST type: %T", e))
 }

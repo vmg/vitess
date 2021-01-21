@@ -39,7 +39,7 @@ type Nodeiface interface {
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{&InterfaceDeclaration{
 			name:  "Nodeiface",
@@ -60,7 +60,7 @@ type Empty struct {}
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{&StructDeclaration{
 			name:   "Empty",
@@ -83,7 +83,7 @@ type Struct struct {
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{&StructDeclaration{
 			name: "Struct",
@@ -112,7 +112,7 @@ type Struct struct {
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{&StructDeclaration{
 			name: "Struct",
@@ -147,7 +147,7 @@ type Struct struct {
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{&StructDeclaration{
 			name: "Struct",
@@ -176,7 +176,7 @@ func (*Empty) method() {}
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{
 			&StructDeclaration{
@@ -207,7 +207,7 @@ type Strings []string
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{&TypeAlias{
 			name: "Strings",
@@ -228,7 +228,40 @@ type String string
 	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
 	require.NoError(t, err)
 
-	result := Walk(ast)
+	result := Walk(fset, ast)
+	expected := SourceFile{
+		lines: []Sast{&TypeAlias{
+			name: "String",
+			typ:  &TypeString{"string"},
+		}},
+	}
+	assert.Equal(t, expected.String(), result.String())
+}
+
+func TestSelector(t *testing.T) {
+	input := `
+	package engine
+
+	type Plan struct {
+		Type         sqlparser.StatementType // The type of query we have
+		Original     string                  // Original is the original query.
+		Instructions Primitive               // Instructions contains the instructions needed to fulfil the query.
+		BindVarNeeds *sqlparser.BindVarNeeds // Stores BindVars needed to be provided as part of expression rewriting
+
+		mu           sync.Mutex    // Mutex to protect the fields below
+		ExecCount    uint64        // Count of times this plan was executed
+		ExecTime     time.Duration // Total execution time
+		ShardQueries uint64        // Total number of shard queries
+		Rows         uint64        // Total number of rows
+		Errors       uint64        // Total number of errors
+	}
+`
+
+	fset := token.NewFileSet()
+	ast, err := parser.ParseFile(fset, "ast.go", input, 0)
+	require.NoError(t, err)
+
+	result := Walk(fset, ast)
 	expected := SourceFile{
 		lines: []Sast{&TypeAlias{
 			name: "String",

@@ -16,6 +16,8 @@ limitations under the License.
 
 package visitorgen
 
+import "fmt"
+
 // simplified ast - when reading the golang ast of the ast.go file, we translate the golang ast objects
 // to this much simpler format, that contains only the necessary information and no more
 type (
@@ -68,6 +70,11 @@ type (
 		rawTypeName() string
 	}
 
+	QualifiedType struct {
+		qual Type
+		typ  TypeString
+	}
+
 	// TypeString is a raw type name, such as `string`
 	TypeString struct {
 		typName string
@@ -89,6 +96,7 @@ var _ Sast = (*StructDeclaration)(nil)
 var _ Sast = (*FuncDeclaration)(nil)
 var _ Sast = (*TypeAlias)(nil)
 
+var _ Type = (*QualifiedType)(nil)
 var _ Type = (*TypeString)(nil)
 var _ Type = (*Ref)(nil)
 var _ Type = (*Array)(nil)
@@ -114,6 +122,14 @@ func (t *Array) toTypString() string {
 
 func (t *TypeString) toTypString() string {
 	return t.typName
+}
+
+func (t *QualifiedType) toTypString() string {
+	return fmt.Sprintf("%s.%s", t.qual, t.typ)
+}
+
+func (t *QualifiedType) toSastString() string {
+	return fmt.Sprintf("%s.%s", t.qual, t.typ)
 }
 
 func (f *FuncDeclaration) toSastString() string {
@@ -167,6 +183,10 @@ func (f *Field) String() string {
 
 func (t *TypeString) rawTypeName() string {
 	return t.typName
+}
+
+func (t *QualifiedType) rawTypeName() string {
+	return t.typ.typName
 }
 
 func (t *Ref) rawTypeName() string {
