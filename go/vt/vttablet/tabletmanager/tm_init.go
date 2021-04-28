@@ -226,6 +226,7 @@ func BuildTabletFromInput(alias *topodatapb.TabletAlias, port, grpcPort int32) (
 		PortMap: map[string]int32{
 			"vt":   port,
 			"grpc": grpcPort,
+			"drpc": grpcPort + 1000,
 		},
 		Keyspace:       *initKeyspace,
 		Shard:          shard,

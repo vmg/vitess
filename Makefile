@@ -211,6 +211,7 @@ java_test:
 
 install_protoc-gen-go:
 	go install github.com/gogo/protobuf/protoc-gen-gofast
+	go install storj.io/drpc/cmd/protoc-gen-go-drpc
 
 PROTO_SRCS = $(wildcard proto/*.proto)
 PROTO_SRC_NAMES = $(basename $(notdir $(PROTO_SRCS)))
@@ -225,7 +226,9 @@ endif
 
 $(PROTO_GO_OUTS): minimaltools install_protoc-gen-go proto/*.proto
 	for name in $(PROTO_SRC_NAMES); do \
-		$(VTROOT)/bin/protoc --gofast_out=plugins=grpc:. --plugin protoc-gen-gofast="${GOBIN}/protoc-gen-gofast" \
+		$(VTROOT)/bin/protoc --gofast_out=plugins=grpc:. --go-drpc_out=. \
+		--plugin protoc-gen-gofast="${GOBIN}/protoc-gen-gofast" \
+		--plugin protoc-gen-go-drpc="${GOBIN}/protoc-gen-go-drpc" \
 		-I${PWD}/dist/vt-protoc-3.6.1/include:proto proto/$${name}.proto && \
 		goimports -w vitess.io/vitess/go/vt/proto/$${name}/$${name}.pb.go; \
 	done

@@ -36,7 +36,8 @@ var (
 
 var (
 	// TabletProtocol is exported for unit tests
-	TabletProtocol = flag.String("tablet_protocol", "grpc", "how to talk to the vttablets")
+	TabletProtocol  = flag.String("tablet_protocol", "grpc", "how to talk to the vttablets")
+	VStreamProtocol = flag.String("vstream_protocol", "drpc", "how to talk to the vttablets for vreplication")
 )
 
 // TabletDialer represents a function that will return a QueryService
@@ -65,13 +66,17 @@ func RegisterDialer(name string, dialer TabletDialer) {
 	dialers[name] = dialer
 }
 
-// GetDialer returns the dialer to use, described by the command line flag
-func GetDialer() TabletDialer {
+func GetDialerForProtocol(proto string) TabletDialer {
 	mu.Lock()
 	defer mu.Unlock()
-	td, ok := dialers[*TabletProtocol]
+	td, ok := dialers[proto]
 	if !ok {
 		log.Exitf("No dialer registered for tablet protocol %s", *TabletProtocol)
 	}
 	return td
+}
+
+// GetDialer returns the dialer to use, described by the command line flag
+func GetDialer() TabletDialer {
+	return GetDialerForProtocol(*TabletProtocol)
 }

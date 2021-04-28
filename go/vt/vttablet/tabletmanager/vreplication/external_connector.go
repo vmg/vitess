@@ -162,7 +162,11 @@ func newTabletConnector(tablet *topodatapb.Tablet) *tabletConnector {
 
 func (tc *tabletConnector) Open(ctx context.Context) error {
 	var err error
-	tc.qs, err = tabletconn.GetDialer()(tc.tablet, grpcclient.FailFast(true))
+	proto := *tabletconn.VStreamProtocol
+	if proto == "" {
+		proto = *tabletconn.TabletProtocol
+	}
+	tc.qs, err = tabletconn.GetDialerForProtocol(proto)(tc.tablet, grpcclient.FailFast(true))
 	return err
 }
 
