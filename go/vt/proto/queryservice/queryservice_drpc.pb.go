@@ -7,8 +7,7 @@ package queryservice
 import (
 	context "context"
 	errors "errors"
-	protojson "google.golang.org/protobuf/encoding/protojson"
-	proto "google.golang.org/protobuf/proto"
+
 	drpc "storj.io/drpc"
 	drpcerr "storj.io/drpc/drpcerr"
 	binlogdata "vitess.io/vitess/go/vt/proto/binlogdata"
@@ -17,20 +16,25 @@ import (
 
 type drpcEncoding_File_queryservice_proto struct{}
 
+type imarshal interface {
+	Marshal() ([]byte, error)
+	Unmarshal([]byte) error
+}
+
 func (drpcEncoding_File_queryservice_proto) Marshal(msg drpc.Message) ([]byte, error) {
-	return proto.Marshal(msg.(proto.Message))
+	return msg.(imarshal).Marshal()
 }
 
 func (drpcEncoding_File_queryservice_proto) Unmarshal(buf []byte, msg drpc.Message) error {
-	return proto.Unmarshal(buf, msg.(proto.Message))
+	return msg.(imarshal).Unmarshal(buf)
 }
 
 func (drpcEncoding_File_queryservice_proto) JSONMarshal(msg drpc.Message) ([]byte, error) {
-	return protojson.Marshal(msg.(proto.Message))
+	panic("unimplemented!")
 }
 
 func (drpcEncoding_File_queryservice_proto) JSONUnmarshal(buf []byte, msg drpc.Message) error {
-	return protojson.Unmarshal(buf, msg.(proto.Message))
+	panic("unimplemented!")
 }
 
 type DRPCQueryClient interface {

@@ -3,6 +3,10 @@ package drpcqueryservice
 import (
 	"context"
 
+	"vitess.io/vitess/go/vt/callerid"
+	"vitess.io/vitess/go/vt/callinfo"
+	"vitess.io/vitess/go/vt/vterrors"
+
 	"storj.io/drpc"
 
 	binlogdatapb "vitess.io/vitess/go/vt/proto/binlogdata"
@@ -103,12 +107,28 @@ func (q *queryServer) StreamHealth(request *querypb.StreamHealthRequest, stream 
 	panic("implement me")
 }
 
-func (q *queryServer) VStream(request *binlogdatapb.VStreamRequest, stream queryservicepb.DRPCQuery_VStreamStream) error {
-	panic("implement me")
+func (q *queryServer) VStream(request *binlogdatapb.VStreamRequest, stream queryservicepb.DRPCQuery_VStreamStream) (err error) {
+	defer q.server.HandlePanic(&err)
+	ctx := callerid.NewContext(callinfo.DRPCCallInfo(stream.Context()),
+		request.EffectiveCallerId,
+		request.ImmediateCallerId,
+	)
+	err = q.server.VStream(ctx, request.Target, request.Position, request.TableLastPKs, request.Filter, func(events []*binlogdatapb.VEvent) error {
+		return stream.Send(&binlogdatapb.VStreamResponse{
+			Events: events,
+		})
+	})
+	return vterrors.ToDRPC(err)
 }
 
-func (q *queryServer) VStreamRows(request *binlogdatapb.VStreamRowsRequest, stream queryservicepb.DRPCQuery_VStreamRowsStream) error {
-	panic("implement me")
+func (q *queryServer) VStreamRows(request *binlogdatapb.VStreamRowsRequest, stream queryservicepb.DRPCQuery_VStreamRowsStream) (err error) {
+	defer q.server.HandlePanic(&err)
+	ctx := callerid.NewContext(callinfo.DRPCCallInfo(stream.Context()),
+		request.EffectiveCallerId,
+		request.ImmediateCallerId,
+	)
+	err = q.server.VStreamRows(ctx, request.Target, request.Query, request.Lastpk, stream.Send)
+	return vterrors.ToDRPC(err)
 }
 
 func (q *queryServer) VStreamResults(request *binlogdatapb.VStreamResultsRequest, stream queryservicepb.DRPCQuery_VStreamResultsStream) error {

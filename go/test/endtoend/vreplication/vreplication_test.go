@@ -106,6 +106,7 @@ func TestBasicVreplicationWorkflow(t *testing.T) {
 	verifyClusterHealth(t, vc)
 	insertInitialData(t)
 	materializeRollup(t)
+	return
 
 	shardCustomer(t, true, []*Cell{defaultCell}, defaultCellName)
 

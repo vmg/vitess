@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	debug = false // set to true to always use local env vtdataroot for local debugging
+	debug = true // set to true to always use local env vtdataroot for local debugging
 
 	originalVtdataroot    string
 	vtdataroot            string
@@ -39,6 +39,7 @@ type ClusterConfig struct {
 	tabletTypes         string
 	tabletPortBase      int
 	tabletGrpcPortBase  int
+	tabletDrpcPortBase  int
 	tabletMysqlPortBase int
 }
 
@@ -120,6 +121,7 @@ func getClusterConfig(idx int, dataRootDir string) *ClusterConfig {
 		vtdataroot:          dataRootDir,
 		tabletPortBase:      basePort + 1000,
 		tabletGrpcPortBase:  basePort + 1991,
+		tabletDrpcPortBase:  basePort + 2991,
 		tabletMysqlPortBase: basePort + 1306,
 	}
 }
@@ -222,6 +224,7 @@ func (vc *VitessCluster) AddTablet(t testing.TB, cell *Cell, keyspace *Keyspace,
 	vttablet := cluster.VttabletProcessInstance(
 		vc.ClusterConfig.tabletPortBase+tabletID,
 		vc.ClusterConfig.tabletGrpcPortBase+tabletID,
+		vc.ClusterConfig.tabletDrpcPortBase+tabletID,
 		tabletID,
 		cell.Name,
 		shard.Name,

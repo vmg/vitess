@@ -37,13 +37,15 @@ func DRPCCheckServiceMap(name string) bool {
 	}
 
 	// then check ServiceMap
-	return CheckServiceMap("drpc", name)
+	check := CheckServiceMap("drpc", name)
+	log.Errorf("DRPCCheckServiceMap(%s) = %v", name, check)
+	return check
 }
 
 func createDRPCServer() {
 	// skip if not registered
 	if !isDRPCEnabled() {
-		log.Infof("Skipping DRPC server creation")
+		log.Errorf("Skipping DRPC server creation")
 		return
 	}
 
@@ -56,7 +58,7 @@ func serveDRPC() {
 		return
 	}
 
-	log.Infof("Listening for DRPC calls on port %v", *DRPCPort)
+	log.Errorf("Listening for DRPC calls on port %v", *DRPCPort)
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", *DRPCPort))
 	if err != nil {
 		log.Exitf("Cannot listen on port %v for DRPC: %v", *DRPCPort)

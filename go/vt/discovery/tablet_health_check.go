@@ -129,6 +129,7 @@ func (thc *tabletHealthCheck) stream(ctx context.Context, callback func(*query.S
 		// This signals the caller to retry
 		return nil
 	}
+	log.Infof("tabletHealthCheck: %T", conn)
 	err := conn.StreamHealth(ctx, callback)
 	if err != nil {
 		// Depending on the specific error the caller can take action

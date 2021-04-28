@@ -187,7 +187,7 @@ type TabletManager struct {
 }
 
 // BuildTabletFromInput builds a tablet record from input parameters.
-func BuildTabletFromInput(alias *topodatapb.TabletAlias, port, grpcPort int32) (*topodatapb.Tablet, error) {
+func BuildTabletFromInput(alias *topodatapb.TabletAlias, portMap map[string]int32) (*topodatapb.Tablet, error) {
 	hostname := *tabletHostname
 	if hostname == "" {
 		var err error
@@ -221,13 +221,9 @@ func BuildTabletFromInput(alias *topodatapb.TabletAlias, port, grpcPort int32) (
 	}
 
 	return &topodatapb.Tablet{
-		Alias:    alias,
-		Hostname: hostname,
-		PortMap: map[string]int32{
-			"vt":   port,
-			"grpc": grpcPort,
-			"drpc": grpcPort + 1000,
-		},
+		Alias:          alias,
+		Hostname:       hostname,
+		PortMap:        portMap,
 		Keyspace:       *initKeyspace,
 		Shard:          shard,
 		KeyRange:       keyRange,

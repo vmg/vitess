@@ -50,6 +50,7 @@ type VttabletProcess struct {
 	Cell                        string
 	Port                        int
 	GrpcPort                    int
+	DrpcPort                    int
 	Shard                       string
 	CommonArg                   VtctlProcess
 	LogDir                      string
@@ -90,6 +91,7 @@ func (vttablet *VttabletProcess) Setup() (err error) {
 		"-tablet-path", vttablet.TabletPath,
 		"-port", fmt.Sprintf("%d", vttablet.Port),
 		"-grpc_port", fmt.Sprintf("%d", vttablet.GrpcPort),
+		"-drpc_port", fmt.Sprintf("%d", vttablet.DrpcPort),
 		"-init_shard", vttablet.Shard,
 		"-log_dir", vttablet.LogDir,
 		"-tablet_hostname", vttablet.TabletHostname,
@@ -468,7 +470,7 @@ func (vttablet *VttabletProcess) BulkLoad(t testing.TB, db, table string, bulkIn
 // VttabletProcessInstance returns a VttabletProcess handle for vttablet process
 // configured with the given Config.
 // The process must be manually started by calling setup()
-func VttabletProcessInstance(port int, grpcPort int, tabletUID int, cell string, shard string, keyspace string, vtctldPort int, tabletType string, topoPort int, hostname string, tmpDirectory string, extraArgs []string, enableSemiSync bool) *VttabletProcess {
+func VttabletProcessInstance(port, grpcPort, drpcPort int, tabletUID int, cell string, shard string, keyspace string, vtctldPort int, tabletType string, topoPort int, hostname string, tmpDirectory string, extraArgs []string, enableSemiSync bool) *VttabletProcess {
 	vtctl := VtctlProcessInstance(topoPort, hostname)
 	vttablet := &VttabletProcess{
 		Name:                        "vttablet",
@@ -476,7 +478,7 @@ func VttabletProcessInstance(port int, grpcPort int, tabletUID int, cell string,
 		FileToLogQueries:            path.Join(tmpDirectory, fmt.Sprintf("/vt_%010d_querylog.txt", tabletUID)),
 		Directory:                   path.Join(os.Getenv("VTDATAROOT"), fmt.Sprintf("/vt_%010d", tabletUID)),
 		TabletPath:                  fmt.Sprintf("%s-%010d", cell, tabletUID),
-		ServiceMap:                  "grpc-queryservice,grpc-tabletmanager,grpc-updatestream,grpc-throttler",
+		ServiceMap:                  "grpc-queryservice,grpc-tabletmanager,grpc-updatestream,grpc-throttler,drpc-queryservice",
 		LogDir:                      tmpDirectory,
 		Shard:                       shard,
 		TabletHostname:              hostname,
@@ -486,6 +488,7 @@ func VttabletProcessInstance(port int, grpcPort int, tabletUID int, cell string,
 		HealthCheckInterval:         5,
 		Port:                        port,
 		GrpcPort:                    grpcPort,
+		DrpcPort:                    drpcPort,
 		VtctldAddress:               fmt.Sprintf("http://%s:%d", hostname, vtctldPort),
 		ExtraArgs:                   extraArgs,
 		EnableSemiSync:              enableSemiSync,
